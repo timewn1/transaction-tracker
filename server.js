@@ -129,7 +129,7 @@ async function transaction(block, ind) {
         // console.log(tx_rs[i]);
         // console.log(decodedInput);
         // data.timestamp = gettimestamp(Number(decodedInput.args['deadline']));
-        data.timestamp = gettimestamp(timestamps[tx_rs[i].blockNumber]);
+        data.timestamp_str = gettimestamp(timestamps[tx_rs[i].blockNumber]);
         data.trade = decodedInput.name;
         // TODO: why here...
         // data.initialAsset = await getTokenSymbol(decodedInput.args["path"][0]);

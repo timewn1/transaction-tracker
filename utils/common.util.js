@@ -1,6 +1,7 @@
 const ethers = require('ethers');
 const Web3 = require('web3');
 const { ERC20Contracts } = require('../contract');
+const e = require('express');
 
 const provider = 'http://44.201.124.26:8545';
 
@@ -41,15 +42,27 @@ function gettimestamp(time) {
     hours = Math.floor((duration / (1000 * 60 * 60)) % 24),
     days = Math.floor(duration / (1000 * 60 * 60) / 24);
 
-  // hours = hours < 10 ? '0' + hours : hours;
-  // minutes = minutes < 10 ? '0' + minutes : minutes;
-  // seconds = seconds < 10 ? '0' + seconds : seconds;
-
   let timestamp = '';
-  if (days > 0) timestamp = timestamp + days + 'days ';
-  if (hours > 0) timestamp = timestamp + hours + 'hrs ';
-  if (minutes > 0) timestamp = timestamp + minutes + 'mins ';
-  timestamp = timestamp + seconds + 'secs ';
+  if (days > 0) {
+    timestamp += days;
+    if (days > 1) timestamp += ' days ';
+    else timestamp += ' day ';
+  }
+  if (hours > 0) {
+    timestamp += hours;
+    if (hours > 1) timestamp += ' hrs ';
+    else timestamp += ' hr ';
+  }
+  if (minutes > 0) {
+    timestamp += minutes;
+    if (minutes > 1) timestamp += ' mins ';
+    else timestamp += ' min ';
+  }
+  timestamp += seconds;
+  if (seconds > 1) timestamp += ' secs ';
+  else timestamp += ' sec ';
+
+  timestamp += ' ago ';
 
   return timestamp;
 }
