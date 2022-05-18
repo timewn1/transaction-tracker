@@ -24,7 +24,7 @@ const Web3 = require('web3');
 const ethers = require('ethers');
 
 const { Uniswap2Contracts, Uniswap3Contracts, SushiswapContracts, ERC20Contracts } = require('./contract.js'); // Contract ABI
-const { getBlock } = require('./utils/common.util');
+const { getBlock, gettimestamp } = require('./utils/common.util');
 
 const provider = 'http://44.201.124.26:8545';
 
@@ -42,17 +42,18 @@ async function getTransactions(block, ind) {
     console.log('Block is ', block);
 
     const block_ls = [];
-
+    let timestamps = {};
     for (let i = block - 9; i <= block; i++) {
       block_ls.push(web3.eth.getBlock(i));
     }
     let block_rs = await Promise.all(block_ls);
-
+    // console.log(block_rs);
     // console.log(block_rs.length, ' ----- ', +new Date() - time, 'ms');
 
     const tx_ls = [];
 
     for (let j = 0; j < block_rs.length; j++) {
+      timestamps[block_rs[j].number] = block_rs[j].timestamp;
       let txs = block_rs[j].transactions;
       if (txs.length > 0) {
         for (let k = txs.length - 1; k >= 0; k--) {
@@ -62,7 +63,10 @@ async function getTransactions(block, ind) {
     }
     const tx_rs = await Promise.all(tx_ls);
     console.log('tx_rs  =  ', tx_rs.length);
-    return tx_rs;
+    return {
+      tx: tx_rs,
+      timestamp: timestamps,
+    };
   } catch (error) {
     console.error(error);
   }
@@ -79,12 +83,14 @@ async function transaction(block, ind) {
     };
 
     do {
-      const tx_rs = await getTransactions(block, ind);
-      const data = {};
-      let inter = null;
-
+      const blockData = await getTransactions(block, ind);
+      // console.log(blockData);
+      const tx_rs = blockData.tx;
+      const timestamps = blockData.timestamp;
       // console.log(tx_rs[i]);
-      for (let i = ind; i < tx_rs.length; i++) {
+      for (let i = tx_rs.length - 1; i >= ind; i--) {
+        let inter = null;
+        const data = {};
         if (tx_rs[i].to === Uniswap2Contracts.address) {
           inter = Uniswap2inter;
           data.name = 'UniV2';
@@ -120,9 +126,10 @@ async function transaction(block, ind) {
         )
           continue;
 
-        console.log(tx_rs[i]);
-        console.log(decodedInput);
-        data.timestamp = Number(decodedInput.args['deadline']);
+        // console.log(tx_rs[i]);
+        // console.log(decodedInput);
+        // data.timestamp = gettimestamp(Number(decodedInput.args['deadline']));
+        data.timestamp = gettimestamp(timestamps[tx_rs[i].blockNumber]);
         data.trade = decodedInput.name;
         // TODO: why here...
         // data.initialAsset = await getTokenSymbol(decodedInput.args["path"][0]);
@@ -176,9 +183,8 @@ app.use('/gettransaction', async (req, res) => {
   else block = params.block;
   if (!params.ind) ind = 0;
   else ind = params.ind;
-  console.log('params    :   ', block, ind);
   let tx = await transaction(block, ind);
   res.send(tx);
 });
-
+console.log(Number(new Date()));
 http.listen(PORT, () => console.log(`Server running on port ${PORT}`));

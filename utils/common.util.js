@@ -15,7 +15,14 @@ function toBigNum(value, d) {
   return ethers.utils.parseUnits(Number(value).toFixed(d), d);
 }
 
-async function getTokenSymbol(address) {
+async function getDatas(data) {
+  const ls = [];
+  for (let i = 0; i < data.length; i++) {
+    ls.push(web3.eth.Contract(ERC20Contracts.abi, data[i].initialAsset));
+    ls.push(web3.eth.Contract(ERC20Contracts.abi, data[i].finalAsset));
+  }
+  const rs = await Promise.all(ls);
+
   const tokenContract = new web3.eth.Contract(ERC20Contracts.abi, address);
   return await tokenContract.methods.symbol().call();
 }
@@ -26,9 +33,31 @@ async function getBlock() {
   return blockNumber;
 }
 
+function gettimestamp(time) {
+  let duration = Number(new Date()) - time * 1000;
+  // let duration = time;
+  let seconds = Math.floor((duration / 1000) % 60),
+    minutes = Math.floor((duration / (1000 * 60)) % 60),
+    hours = Math.floor((duration / (1000 * 60 * 60)) % 24),
+    days = Math.floor(duration / (1000 * 60 * 60) / 24);
+
+  // hours = hours < 10 ? '0' + hours : hours;
+  // minutes = minutes < 10 ? '0' + minutes : minutes;
+  // seconds = seconds < 10 ? '0' + seconds : seconds;
+
+  let timestamp = '';
+  if (days > 0) timestamp = timestamp + days + 'days ';
+  if (hours > 0) timestamp = timestamp + hours + 'hrs ';
+  if (minutes > 0) timestamp = timestamp + minutes + 'mins ';
+  timestamp = timestamp + seconds + 'secs ';
+
+  return timestamp;
+}
+
 module.exports = {
   fromBigNum,
   toBigNum,
-  getTokenSymbol,
+  getDatas,
   getBlock,
+  gettimestamp,
 };
