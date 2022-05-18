@@ -62,7 +62,7 @@ function gettimestamp(time) {
   if (seconds > 1) timestamp += ' secs ';
   else timestamp += ' sec ';
 
-  timestamp += ' ago ';
+  timestamp += 'ago';
 
   return timestamp;
 }
