@@ -7,7 +7,6 @@ const provider = 'http://44.201.124.26:8545';
 const web3Provider = new Web3.providers.HttpProvider(provider);
 const web3 = new Web3(web3Provider);
 
-
 function fromBigNum(value, d) {
   return parseFloat(ethers.utils.formatUnits(value, d));
 }
@@ -22,12 +21,14 @@ async function getTokenSymbol(address) {
 }
 
 async function getBlock() {
-  return await web3.eth.getBlockNumber();
+  const blockNumber = await web3.eth.getBlockNumber();
+  console.log('latest block is ', blockNumber);
+  return blockNumber;
 }
 
 module.exports = {
   fromBigNum,
   toBigNum,
   getTokenSymbol,
-  getBlock
-}
+  getBlock,
+};
