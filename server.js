@@ -24,7 +24,7 @@ const Web3 = require('web3');
 const ethers = require('ethers');
 
 const { Uniswap2Contracts, Uniswap3Contracts, SushiswapContracts, ERC20Contracts } = require('./contract.js'); // Contract ABI
-const { getBlock, gettimestamp } = require('./utils/common.util');
+const { getBlock, gettimestamp, getDatas } = require('./utils/common.util');
 
 const provider = 'http://44.201.124.26:8545';
 
@@ -126,16 +126,13 @@ async function transaction(block, ind) {
         )
           continue;
 
-        // console.log(tx_rs[i]);
-        // console.log(decodedInput);
-        // data.timestamp = gettimestamp(Number(decodedInput.args['deadline']));
+        console.log(tx_rs[i]);
+        console.log(decodedInput);
         data.timestamp_str = gettimestamp(timestamps[tx_rs[i].blockNumber]);
         data.trade = decodedInput.name;
-        // TODO: why here...
-        // data.initialAsset = await getTokenSymbol(decodedInput.args["path"][0]);
-        // data.finalAsset = await getTokenSymbol(de codedInput.args["path"][decodedInput.args["path"].length - 1]);
-        data.initialAsset = decodedInput.args['path'][0];
-        data.finalAsset = decodedInput.args['path'][decodedInput.args['path'].length - 1];
+
+        data.initialAssetAddress = decodedInput.args['path'][0];
+        data.finalAssetAddress = decodedInput.args['path'][decodedInput.args['path'].length - 1];
         if (decodedInput.name === 'swapExactETHForTokens') {
           data.initialAmount = tx_rs[i].value;
         } else {
@@ -152,7 +149,8 @@ async function transaction(block, ind) {
         }
         data.makerWallet = tx_rs[i].from;
         data.txnHash = tx_rs[i].hash;
-        data.gasPrice = tx_rs[i].gas;
+        data.gasPrice = Number(tx_rs[i].gasPrice) / Math.pow(10, 9);
+        data.txn_fee = (tx_rs[i].gas * Number(tx_rs[i].gasPrice)) / Math.pow(10, 18);
         data.blockNumber = tx_rs[i].blockNumber;
         transactions.push(data);
         if (transactions.length === 25) {
@@ -167,8 +165,8 @@ async function transaction(block, ind) {
 
     // console.log('end    :   ', counts, '  --------------------  ', +new Date() - time, 'ms');
     console.log(transactions.length);
-
-    returnData.transaction = transactions;
+    const data = await getDatas(transactions);
+    returnData.transaction = data;
     return returnData;
   } catch (error) {
     console.log(error);

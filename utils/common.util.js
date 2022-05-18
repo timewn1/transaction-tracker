@@ -4,6 +4,7 @@ const { ERC20Contracts } = require('../contract');
 const e = require('express');
 
 const provider = 'http://44.201.124.26:8545';
+// const provider = 'http://127.0.0.1:8545';
 
 const web3Provider = new Web3.providers.HttpProvider(provider);
 const web3 = new Web3(web3Provider);
@@ -19,13 +20,25 @@ function toBigNum(value, d) {
 async function getDatas(data) {
   const ls = [];
   for (let i = 0; i < data.length; i++) {
-    ls.push(web3.eth.Contract(ERC20Contracts.abi, data[i].initialAsset));
-    ls.push(web3.eth.Contract(ERC20Contracts.abi, data[i].finalAsset));
+    const tokenContract1 = new web3.eth.Contract(ERC20Contracts.abi, data[i].initialAssetAddress);
+    const tokenContract2 = new web3.eth.Contract(ERC20Contracts.abi, data[i].finalAssetAddress);
+    ls.push(tokenContract1.methods.symbol().call());
+    ls.push(tokenContract2.methods.symbol().call());
+    ls.push(tokenContract1.methods.decimals().call());
+    ls.push(tokenContract2.methods.decimals().call());
   }
   const rs = await Promise.all(ls);
 
-  const tokenContract = new web3.eth.Contract(ERC20Contracts.abi, address);
-  return await tokenContract.methods.symbol().call();
+  for (let i = 0; i < rs.length; i = i + 4) {
+    let ind = Math.floor(i / 4);
+    let dec1 = Math.pow(10, Number(rs[i + 2]));
+    let dec2 = Math.pow(10, Number(rs[i + 3]));
+    data[ind].initialAssetSymbol = rs[i];
+    data[ind].finalAssetSymbol = rs[i + 1];
+    data[ind].initialAmount = Number(data[ind].initialAmount) / dec1;
+    data[ind].finalAmount = Number(data[ind].finalAmount) / dec2;
+  }
+  return data;
 }
 
 async function getBlock() {
